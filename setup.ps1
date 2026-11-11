@@ -152,8 +152,16 @@ $summary["Git"] = "ok"
 if (-not (Test-Path (Join-Path $root "lesson-runner\package.json"))) {
     # The script is running outside the tutorial. Use the folder that is already in place, or clone the repository into it.
     if (Test-Path $defaultRepoPath) {
-        if (-not (Test-Path (Join-Path $defaultRepoPath "lesson-runner\package.json"))) {
-            Stop-Setup "$defaultRepoPath already exists but has no lesson-runner folder. Move or rename that folder, then run this script again, so the repository can be cloned into a new folder."
+        $runnerFile = Join-Path $defaultRepoPath "lesson-runner\package.json"
+        if (-not (Test-Path $runnerFile)) {
+            $runnerFolder = Join-Path $defaultRepoPath "lesson-runner"
+            Write-Host "   Contents of ${runnerFolder}:" -ForegroundColor Yellow
+            if (Test-Path $runnerFolder) {
+                Get-ChildItem -Path $runnerFolder -Force | ForEach-Object { Write-Host "     $($_.Name)" }
+            } else {
+                Write-Host "     (the lesson-runner folder does not exist)"
+            }
+            Stop-Setup "$runnerFile was not found. The folder $defaultRepoPath is not a complete copy of the tutorial. Move or rename that folder, then run this script again, so the repository can be cloned into a new folder."
         }
         Write-Host "   Using the existing folder at $defaultRepoPath (no clone needed)"
         $repoRoot = $defaultRepoPath
