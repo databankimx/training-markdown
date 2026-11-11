@@ -1,0 +1,8 @@
+{
+  "title": "Emphasis and Inline Code",
+  "runtime": "markdown",
+  "minutes": 12,
+  "objective": "Use bold, italics, and inline code in a sentence, and check each pair in the rendered page.",
+  "prerequisites": ["Headings and Paragraphs"],
+  "hint": "Bold uses two asterisks on each side of the word. Italics uses one. Inline code uses single backticks. A pair that isn't closed changes the rest of the line."
+}

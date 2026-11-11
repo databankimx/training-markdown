@@ -1,0 +1,7 @@
+{
+  "title": "Why Markdown",
+  "runtime": "none",
+  "minutes": 10,
+  "objective": "Explain what Markdown is, why it suits documents that live in a code repository, and how a change to a Markdown file is tracked the same way as a change to code.",
+  "prerequisites": []
+}

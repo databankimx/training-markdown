@@ -1,0 +1,8 @@
+{
+  "title": "Headings and Paragraphs",
+  "runtime": "markdown",
+  "minutes": 15,
+  "objective": "Write headings at the right levels, and paragraphs whose lines join into one block when rendered.",
+  "prerequisites": ["Why Markdown"],
+  "hint": "Lines that follow each other with no blank line between them form one paragraph. A new paragraph needs a blank line before it. Check the heading levels against the description, too."
+}

@@ -1,0 +1,8 @@
+{
+  "title": "Tables",
+  "runtime": "markdown",
+  "minutes": 12,
+  "objective": "Write a table with a header row, a row of hyphens, and matching columns, set off from the text before it by a blank line, and align a column with colons in the hyphen row.",
+  "prerequisites": ["Links"],
+  "hint": "Put a blank line before the table. The second row is hyphens and pipes, and every row needs the same number of columns as the header. A colon at the right end of a column's hyphens right-aligns that column."
+}

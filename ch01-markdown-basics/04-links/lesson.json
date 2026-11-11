@@ -1,0 +1,8 @@
+{
+  "title": "Links",
+  "runtime": "markdown",
+  "minutes": 12,
+  "objective": "Write links with clear text, relative paths for files in the project, and web addresses for pages, and add an image with useful alt text.",
+  "prerequisites": ["Lists"],
+  "hint": "A link has square brackets, then round brackets, with no space between. An image is the same with an exclamation mark in front. Check that each address and each alt text matches the description, not just the words around it."
+}
