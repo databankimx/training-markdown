@@ -150,9 +150,12 @@ Write-Host "   Git: $gitExe"
 $summary["Git"] = "ok"
 
 if (-not (Test-Path (Join-Path $root "lesson-runner\package.json"))) {
-    # The script is running outside the tutorial. Clone it, or use the existing clone, then run its copy.
-    if (Test-Path (Join-Path $defaultRepoPath "lesson-runner\package.json")) {
-        Write-Host "   Using the repository at $defaultRepoPath"
+    # The script is running outside the tutorial. Use the folder that is already in place, or clone the repository into it.
+    if (Test-Path $defaultRepoPath) {
+        if (-not (Test-Path (Join-Path $defaultRepoPath "lesson-runner\package.json"))) {
+            Stop-Setup "$defaultRepoPath already exists but has no lesson-runner folder. Move or rename that folder, then run this script again, so the repository can be cloned into a new folder."
+        }
+        Write-Host "   Using the existing folder at $defaultRepoPath (no clone needed)"
         $repoRoot = $defaultRepoPath
     } else {
         Write-Host "   Cloning $RepoUrl ($Branch) into $defaultRepoPath"
