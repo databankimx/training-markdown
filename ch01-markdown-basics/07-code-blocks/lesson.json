@@ -1,0 +1,8 @@
+{
+  "title": "Code Blocks",
+  "runtime": "markdown",
+  "minutes": 12,
+  "objective": "Write fenced code blocks with a language name, and keep their indentation and closing fences correct.",
+  "prerequisites": ["Block Quotes and Rules"],
+  "hint": "A code block opens with three backticks and the language name on one line, and closes with three backticks on a line of their own. Indentation inside the block is part of the code, so keep the four spaces before return."
+}

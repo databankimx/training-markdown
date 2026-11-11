@@ -1,0 +1,8 @@
+{
+  "title": "Checking a File Before You Share It",
+  "runtime": "markdown",
+  "minutes": 15,
+  "objective": "Find and fix the problems a checklist catches in a Markdown page: a heading without a space, a list with no blank line before it, and a long dash.",
+  "prerequisites": ["Code Blocks"],
+  "hint": "Check the first line for a space after the hash sign. Check that the list has a blank line before it. Check the sentence for a long dash, which the description doesn't use: a comma will do."
+}

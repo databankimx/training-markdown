@@ -1,0 +1,8 @@
+{
+  "title": "Block Quotes and Rules",
+  "runtime": "markdown",
+  "minutes": 10,
+  "objective": "Write a note in a block quote, and separate sections with a horizontal rule.",
+  "prerequisites": ["Tables"],
+  "hint": "A block quote starts each line with a greater-than sign. A horizontal rule is three hyphens on a line of their own, with a blank line before and after it."
+}

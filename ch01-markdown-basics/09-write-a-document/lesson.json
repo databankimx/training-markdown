@@ -1,0 +1,8 @@
+{
+  "title": "Exercise: Write a Setup Page",
+  "runtime": "markdown",
+  "minutes": 15,
+  "objective": "Write the Markdown for a short setup page so that its rendered output matches the description.",
+  "prerequisites": ["Checking a File Before You Share It"],
+  "hint": "Check each part of the description in turn. A list needs a hyphen and a space before each item, and a blank line before the list. A table needs a header row, a row of hyphens, and one row for each entry."
+}

@@ -1,0 +1,8 @@
+{
+  "title": "Summary",
+  "runtime": "markdown",
+  "minutes": 15,
+  "objective": "Review the rules from every lesson, and fix a page that breaks three of them.",
+  "prerequisites": ["Exercise: Write a Setup Page"],
+  "hint": "Check three things. Does the first line have a space after its hash signs? Is there a blank line between the paragraph and the list? Does every row of the table have the same number of columns as its header?"
+}

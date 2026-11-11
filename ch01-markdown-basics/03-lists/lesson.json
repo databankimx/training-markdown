@@ -1,0 +1,8 @@
+{
+  "title": "Lists",
+  "runtime": "markdown",
+  "minutes": 12,
+  "objective": "Write numbered and bulleted lists, including a bulleted list nested under a numbered item.",
+  "prerequisites": ["Emphasis and Inline Code"],
+  "hint": "Each item starts with its number or a hyphen and a space. A nested list needs its own items indented under the item above, usually by three spaces after a numbered item."
+}
