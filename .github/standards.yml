@@ -1,0 +1,9 @@
+# DataBank Standards Policy Configuration
+# See Custom-Dev-Developer-Guide.md for full rule documentation.
+#
+# This repository is a Markdown tutorial with a small JavaScript (Electron)
+# lesson runner. Installed packages are not our code and are excluded.
+
+javascript:
+  excluded_globs:
+    - "**/node_modules/**"
