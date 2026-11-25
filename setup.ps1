@@ -136,6 +136,8 @@ function Get-Prop($Object, [string]$Name, $Default = $null) {
     if ($null -eq $Object) { return $Default }
     $property = $Object.PSObject.Properties[$Name]
     if ($null -eq $property -or $null -eq $property.Value) { return $Default }
+    # The comma keeps arrays whole. Without it, PowerShell unrolls a one-item list to its item, and an empty list to nothing.
+    if ($property.Value -is [array]) { return ,$property.Value }
     return $property.Value
 }
 
