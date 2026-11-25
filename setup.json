@@ -31,7 +31,7 @@
     }
   ],
   "launch": {
-    "ide": "none",
+    "ide": "vscode",
     "kind": "electron",
     "folder": "lesson-runner"
   }
