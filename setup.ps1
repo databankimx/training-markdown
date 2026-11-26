@@ -513,6 +513,11 @@ function Install-Program([string]$Name, $Spec, [bool]$Upgrade) {
     $wingetArgs = @()
     if ($Upgrade) { $wingetArgs += "upgrade" } else { $wingetArgs += "install" }
     $wingetArgs += @("-e", "--id", $id, "--silent", "--accept-package-agreements", "--accept-source-agreements")
+    # VS Code has a user installer and a system installer. The user installer warns when run as Administrator, so an
+    # elevated session gets the system installer, and a standard session gets the user installer.
+    if ($Name -eq "vscode") {
+        if (Test-Administrator) { $wingetArgs += @("--scope", "machine") } else { $wingetArgs += @("--scope", "user") }
+    }
     $override = Get-Prop $Spec "override" $null
     if ($override) { $wingetArgs += @("--override", $override) }
     Invoke-Winget $wingetArgs
