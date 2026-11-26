@@ -59,6 +59,13 @@ param(
 
 # Continue, not Stop: native programs write to stderr, and every failure is checked explicitly.
 $ErrorActionPreference = "Continue"
+# Node and npm print UTF-8 (check marks, arrows). Reading them as the console's default code page garbles the log.
+try {
+    [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+    $OutputEncoding = [System.Text.Encoding]::UTF8
+} catch {
+    # Keep the default encoding when the console doesn't allow a change.
+}
 
 $DefaultBaseDirectory = "C:\Development\training"
 $WingetSuccessCodes = @(0, 3010, -1978335189)   # 3010 = restart required, -1978335189 = already installed
@@ -681,7 +688,15 @@ function Invoke-NpmStep($Step, [string]$Name) {
         # npm can leave Electron's binary missing (npm bug 4828). A rebuild usually fixes it.
         Invoke-Quiet $npm @("rebuild") $folder | Out-Null
         if (-not (Test-Path -LiteralPath $electronExe)) {
-            Set-Outcome $Name "warning" "Electron's binary is missing. The runner may not start."
+            # Electron's own install script downloads the binary. Run it directly, so a blocked download shows its reason.
+            $node = Find-Exe "node" @("$env:ProgramFiles\nodejs\node.exe")
+            if ($node) {
+                $install = Invoke-Quiet $node @("install.js") $electron
+                if ($install.Code -ne 0) { Show-FailureTail $install }
+            }
+        }
+        if (-not (Test-Path -LiteralPath $electronExe)) {
+            Set-Outcome $Name "warning" "Electron's binary didn't download. Check that github.com is reachable through your network or proxy, then run this script again. Electron's own installer output is in the log."
             return
         }
     }
