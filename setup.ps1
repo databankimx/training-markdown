@@ -131,6 +131,10 @@ function Set-Outcome([string]$Name, [string]$Status, [string]$Detail = "") {
         $color = "Red"
         if ($Status -eq "warning") { $color = "Yellow" }
         Write-Log ("   {0}: {1}. {2}" -f $Name, $Status, $Detail) $color
+    } else {
+        $color = "Green"
+        if ($Status -eq "skipped") { $color = "DarkGray" }
+        Write-Host ("   {0}: {1} {2}" -f $Name, $Status, $Detail).TrimEnd() -ForegroundColor $color
     }
 }
 
@@ -597,6 +601,7 @@ function Invoke-InstallItem([string]$Name) {
     if (-not $enabled) { Set-Outcome $Name "skipped" "install is false in setup.json"; return }
     if ($SkipInstall -and $Name -ne "git") { Set-Outcome $Name "skipped" "-SkipInstall"; return }
 
+    Write-Host ("   Checking " + $Name + " ...") -ForegroundColor Gray
     try {
         switch ($Name) {
             "visualStudio" { Confirm-VisualStudio $spec; return }
@@ -665,6 +670,31 @@ function Invoke-InstallItem([string]$Name) {
 # Steps
 # ---------------------------------------------------------------------------------------------------------------------
 
+# Loads a package in a small Node script and returns the first line of its error cause chain, or "" when it loads.
+# The script is written to the temp folder, so quoting never reaches the command line.
+function Get-LoadCause([string]$Node, [string]$PackageIndex) {
+    $checkFile = Join-Path $env:TEMP "setup-load-check.mjs"
+    $js = @'
+import { pathToFileURL } from "node:url"
+try {
+  await import(pathToFileURL(process.argv[2]).href)
+  console.log("loaded")
+} catch (e) {
+  let c = e
+  while (c) {
+    console.log("cause: " + (c.code || "") + " " + c.message)
+    c = c.cause
+  }
+}
+'@
+    Set-Content -LiteralPath $checkFile -Value $js -Encoding UTF8
+    $check = Invoke-Quiet $Node @($checkFile, $PackageIndex)
+    foreach ($line in $check.Output) { Write-Host ("      " + $line) -ForegroundColor DarkGray }
+    $cause = @($check.Output | Where-Object { $_ -like "cause:*" })
+    if ($cause.Count -gt 0) { return ($cause[0] -replace '^cause:\s*', '').Trim() }
+    return ""
+}
+
 function Invoke-NpmStep($Step, [string]$Name) {
     $folder = Get-RepoPath (Get-Prop $Step "folder" ".")
     $npm = Find-Exe "npm.cmd" @()
@@ -690,13 +720,25 @@ function Invoke-NpmStep($Step, [string]$Name) {
         if (-not (Test-Path -LiteralPath $electronExe)) {
             # Electron's own install script downloads the binary. Run it directly, so a blocked download shows its reason.
             $node = Find-Exe "node" @("$env:ProgramFiles\nodejs\node.exe")
+            $cause = ""
             if ($node) {
                 $install = Invoke-Quiet $node @("install.js") $electron
-                if ($install.Code -ne 0) { Show-FailureTail $install }
+                if ($install.Code -ne 0) {
+                    Show-FailureTail $install
+                    $extractIndex = Join-Path $folder "node_modules\@electron-internal\extract-zip\index.js"
+                    if (Test-Path -LiteralPath $extractIndex) {
+                        Write-Host "   Checking why Electron's zip extractor won't load:" -ForegroundColor Gray
+                        $cause = Get-LoadCause $node $extractIndex
+                    }
+                }
             }
         }
         if (-not (Test-Path -LiteralPath $electronExe)) {
-            Set-Outcome $Name "warning" "Electron's binary didn't download. Check that github.com is reachable through your network or proxy, then run this script again. Electron's own installer output is in the log."
+            if ($cause) {
+                Set-Outcome $Name "warning" "Electron's zip extractor didn't load: $cause. The full cause chain is above and in the log."
+            } else {
+                Set-Outcome $Name "warning" "Electron's binary didn't download. Check that github.com is reachable through your network or proxy, then run this script again. Electron's own installer output is in the log."
+            }
             return
         }
     }
@@ -839,6 +881,7 @@ function Invoke-Step($Step) {
         Set-Outcome $name "skipped" "tests are off (-SkipTests or runTests is false)"
         return
     }
+    Write-Host ("   Running: " + $name + " (" + $type + ") ...") -ForegroundColor Gray
     foreach ($required in @(Get-Prop $Step "requires" @())) {
         if ($script:Status[$required] -eq "failed") {
             Set-Outcome $name "skipped" "requires $required, which failed"
