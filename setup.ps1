@@ -132,15 +132,13 @@ function Set-Outcome([string]$Name, [string]$Status, [string]$Detail = "") {
 # ---------------------------------------------------------------------------------------------------------------------
 
 # Reads a property from a parsed JSON object, with a default when it's missing or null.
+# Returns a property, or $Default. Lists come back as plain values, so callers wrap them in @(...) to get an array.
+# Don't add a leading comma here: it makes @(Get-Prop ...) hold the whole list as one item.
 function Get-Prop($Object, [string]$Name, $Default = $null) {
-    $value = $Default
-    if ($null -ne $Object) {
-        $property = $Object.PSObject.Properties[$Name]
-        if ($null -ne $property -and $null -ne $property.Value) { $value = $property.Value }
-    }
-    # The comma keeps arrays whole. Without it, PowerShell unrolls a one-item list to its item, and an empty list to nothing.
-    if ($value -is [array]) { return ,$value }
-    return $value
+    if ($null -eq $Object) { return $Default }
+    $property = $Object.PSObject.Properties[$Name]
+    if ($null -eq $property -or $null -eq $property.Value) { return $Default }
+    return $property.Value
 }
 
 function Test-Administrator {
@@ -513,11 +511,6 @@ function Install-Program([string]$Name, $Spec, [bool]$Upgrade) {
     $wingetArgs = @()
     if ($Upgrade) { $wingetArgs += "upgrade" } else { $wingetArgs += "install" }
     $wingetArgs += @("-e", "--id", $id, "--silent", "--accept-package-agreements", "--accept-source-agreements")
-    # VS Code has a user installer and a system installer. The user installer warns when run as Administrator, so an
-    # elevated session gets the system installer, and a standard session gets the user installer.
-    if ($Name -eq "vscode") {
-        if (Test-Administrator) { $wingetArgs += @("--scope", "machine") } else { $wingetArgs += @("--scope", "user") }
-    }
     $override = Get-Prop $Spec "override" $null
     if ($override) { $wingetArgs += @("--override", $override) }
     Invoke-Winget $wingetArgs
@@ -1106,7 +1099,8 @@ function Get-SchemaProblems($Config) {
         if ($type -eq "write-file" -and $null -eq (Get-Prop $step "content" $null) -and $null -eq (Get-Prop $step "contentFrom" $null)) {
             [void]$problems.Add("$label (write-file) needs 'content', or 'contentFrom' naming an installed program.")
         }
-        if ($type -eq "dotnet-build" -and -not (Test-IsTextList (Get-Prop $step "projects" $null))) {
+        $projects = Get-Prop $step "projects" $null
+        if ($type -eq "dotnet-build" -and ($null -eq $projects -or -not (Test-IsTextList @($projects)))) {
             [void]$problems.Add("$label (dotnet-build) needs 'projects', a list of project paths.")
         }
         foreach ($flag in @("enabled", "runTests", "backup", "elevated")) {
@@ -1115,7 +1109,7 @@ function Get-SchemaProblems($Config) {
         }
         $requires = Get-Prop $step "requires" $null
         if ($null -ne $requires) {
-            if (-not (Test-IsTextList $requires)) {
+            if (-not (Test-IsTextList @($requires))) {
                 [void]$problems.Add("$label 'requires' must be a list of program names.")
             } else {
                 foreach ($need in @($requires)) {

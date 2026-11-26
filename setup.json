@@ -10,7 +10,7 @@
     "git": { "install": true, "winget": "Git.Git" },
     "powershell7": { "install": true, "pinned": "7", "winget": "Microsoft.PowerShell" },
     "node": { "install": true, "pinned": "24", "orNewer": true, "winget": "OpenJS.NodeJS.LTS" },
-    "vscode": { "install": true, "pinned": "1", "winget": "Microsoft.VisualStudioCode", "override": "/mergetasks=!runcode", "extensions": [] },
+    "vscode": { "install": true, "pinned": "1", "winget": "Microsoft.VisualStudioCode", "extensions": [] },
     "buildTools": { "install": false }
   },
   "steps": [
