@@ -7,11 +7,33 @@
   "baseDirectory": "C:\\Development\\training",
   "runTests": true,
   "installs": {
-    "git": { "install": true, "winget": "Git.Git" },
-    "powershell7": { "install": true, "pinned": "7", "winget": "Microsoft.PowerShell" },
-    "node": { "install": true, "pinned": "24", "orNewer": true, "winget": "OpenJS.NodeJS.LTS" },
-    "vscode": { "install": true, "pinned": "1", "winget": "Microsoft.VisualStudioCode", "extensions": [] },
-    "buildTools": { "install": false }
+    "git": {
+      "install": true,
+      "winget": "Git.Git"
+    },
+    "powershell7": {
+      "install": true,
+      "pinned": "7",
+      "winget": "Microsoft.PowerShell"
+    },
+    "node": {
+      "install": true,
+      "pinned": "24",
+      "orNewer": true,
+      "winget": "OpenJS.NodeJS.LTS"
+    },
+    "vscode": {
+      "install": true,
+      "pinned": "1",
+      "winget": "Microsoft.VisualStudioCode",
+      "extensions": []
+    },
+    "buildTools": {
+      "install": false
+    },
+    "vcRuntime": {
+      "install": true
+    }
   },
   "steps": [
     {
@@ -19,7 +41,9 @@
       "type": "npm",
       "folder": "lesson-runner",
       "command": "ci",
-      "requires": [ "node" ]
+      "requires": [
+        "node"
+      ]
     },
     {
       "name": "Lesson runner tests",
@@ -27,7 +51,9 @@
       "folder": "lesson-runner",
       "script": "test",
       "runTests": true,
-      "requires": [ "node" ]
+      "requires": [
+        "node"
+      ]
     }
   ],
   "launch": {
