@@ -133,12 +133,14 @@ function Set-Outcome([string]$Name, [string]$Status, [string]$Detail = "") {
 
 # Reads a property from a parsed JSON object, with a default when it's missing or null.
 function Get-Prop($Object, [string]$Name, $Default = $null) {
-    if ($null -eq $Object) { return $Default }
-    $property = $Object.PSObject.Properties[$Name]
-    if ($null -eq $property -or $null -eq $property.Value) { return $Default }
+    $value = $Default
+    if ($null -ne $Object) {
+        $property = $Object.PSObject.Properties[$Name]
+        if ($null -ne $property -and $null -ne $property.Value) { $value = $property.Value }
+    }
     # The comma keeps arrays whole. Without it, PowerShell unrolls a one-item list to its item, and an empty list to nothing.
-    if ($property.Value -is [array]) { return ,$property.Value }
-    return $property.Value
+    if ($value -is [array]) { return ,$value }
+    return $value
 }
 
 function Test-Administrator {
@@ -157,11 +159,11 @@ function ConvertTo-Version3([string]$Text) {
     return [version]("{0}.{1}.{2}" -f $parts[0], $parts[1], $parts[2])
 }
 
-# True when $Have is at least $Minimum. A missing minimum always passes.
 # Compares an installed version with a pin. A pin names a major version ("24"), a major and minor ("3.12"), or all
 # three ("3.10.0"). The parts the pin names must match: 3.12.7 matches "3.12", and 3.15.0 doesn't. For a pin with a
-# patch, the installed patch must be the same or higher. Returns "match", "below", or "above".
-function Test-Pinned([string]$Have, [string]$Pin) {
+# patch, the installed patch must be the same or higher. With $OrNewer (the "orNewer" setting), a higher major
+# version also matches, so a "24" pin accepts 26. Returns "match", "below", or "above".
+function Test-Pinned([string]$Have, [string]$Pin, [bool]$OrNewer = $false) {
     if (-not $Pin) { return "match" }
     $haveVersion = ConvertTo-Version3 $Have
     if ($null -eq $haveVersion) { return "below" }
@@ -169,7 +171,10 @@ function Test-Pinned([string]$Have, [string]$Pin) {
     $pinParts = @($Pin.Split('.') | ForEach-Object { [int]$_ })
     for ($i = 0; $i -lt [Math]::Min($pinParts.Count, 2); $i++) {
         if ($haveParts[$i] -lt $pinParts[$i]) { return "below" }
-        if ($haveParts[$i] -gt $pinParts[$i]) { return "above" }
+        if ($haveParts[$i] -gt $pinParts[$i]) {
+            if ($OrNewer -and $i -eq 0) { return "match" }
+            return "above"
+        }
     }
     if ($pinParts.Count -ge 3 -and $haveParts[2] -lt $pinParts[2]) { return "below" }
     return "match"
@@ -596,10 +601,11 @@ function Invoke-InstallItem([string]$Name) {
 
         $minimum = Get-Prop $spec "pinned" $null
         $sideBySide = [bool](Get-Prop $spec "sideBySide" $false)
+        $orNewer = [bool](Get-Prop $spec "orNewer" $false)
         $have = Get-ProgramVersion $Name $spec
 
         $pinState = "below"
-        if ($have) { $pinState = Test-Pinned $have $minimum }
+        if ($have) { $pinState = Test-Pinned $have $minimum $orNewer }
         if ($pinState -eq "match") {
             Set-Outcome $Name "ok" $have.Trim()
         } elseif ($pinState -eq "above") {
@@ -632,7 +638,7 @@ function Invoke-InstallItem([string]$Name) {
             }
 
             $now = Get-ProgramVersion $Name $spec
-            if ($now -and ((Test-Pinned $now $minimum) -eq "match")) {
+            if ($now -and ((Test-Pinned $now $minimum $orNewer) -eq "match")) {
                 if ($action -eq "upgrade") { $word = "upgraded" } else { $word = "installed" }
                 Set-Outcome $Name $word $now.Trim()
             } elseif ($have) {
@@ -933,7 +939,7 @@ function Invoke-Bootstrap {
 $KnownInstalls = @("git", "powershell7", "node", "python", "dotnet", "jdk", "maven", "msys2", "rust", "visualStudio", "buildTools", "vcRuntime", "vscode")
 $KnownStepTypes = @("npm", "npm-run", "python-venv", "command", "copy", "msbuild-restore", "write-file", "dotnet-build")
 $KnownRootSettings = @("schemaVersion", "name", "folder", "repoUrl", "branch", "baseDirectory", "runTests", "installs", "steps", "launch")
-$KnownInstallSettings = @("install", "pinned", "sideBySide", "winget", "override", "root", "url", "workloads", "packages", "extensions")
+$KnownInstallSettings = @("install", "pinned", "sideBySide", "orNewer", "winget", "override", "root", "url", "workloads", "packages", "extensions")
 $KnownStepSettings = @("name", "type", "folder", "enabled", "requires", "runTests", "command", "script", "path", "requirements", "exe", "args", "check", "source", "dest", "backup", "solution", "content", "contentFrom", "projects", "elevated")
 
 function Test-IsText($Value) { return ($Value -is [string]) }
@@ -1044,7 +1050,7 @@ function Get-SchemaProblems($Config) {
                     [void]$problems.Add("$where isn't a setting that installs supports.")
                     continue
                 }
-                if ($settingName -eq "install" -or $settingName -eq "sideBySide") {
+                if ($settingName -eq "install" -or $settingName -eq "sideBySide" -or $settingName -eq "orNewer") {
                     if (-not (Test-IsFlag $value)) { [void]$problems.Add("$where must be true or false.") }
                 } elseif ($settingName -eq "pinned") {
                     if (-not (Test-IsText $value) -or $value -notmatch '^\d+(\.\d+){0,2}$') {
