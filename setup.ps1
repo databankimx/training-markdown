@@ -88,6 +88,7 @@ $script:LogFile = $null
 $script:LogBuffer = New-Object System.Collections.ArrayList
 $script:Status = @{}
 $script:Problems = New-Object System.Collections.ArrayList
+$script:Outcomes = New-Object System.Collections.ArrayList
 $script:RunTestsEffective = $false
 $script:InstallPaths = @{}
 
@@ -125,6 +126,7 @@ function Write-Stage([string]$Title) {
 # Records the result of an install or step. Only failures and warnings are printed. Everything goes to the log.
 function Set-Outcome([string]$Name, [string]$Status, [string]$Detail = "") {
     $script:Status[$Name] = $Status
+    [void]$script:Outcomes.Add([pscustomobject]@{ Name = $Name; Status = $Status; Detail = $Detail })
     Write-LogOnly ("{0}: {1} {2}" -f $Name, $Status, $Detail)
     if ($Status -eq "failed" -or $Status -eq "warning") {
         [void]$script:Problems.Add([pscustomobject]@{ Name = $Name; Status = $Status; Detail = $Detail })
@@ -1423,6 +1425,17 @@ if (-not $NoLaunch) {
     Start-Runner (Get-Prop $script:Config "launch" $null)
 }
 
+Write-Log ""
+Write-Log "Summary" "Yellow"
+foreach ($item in $script:Outcomes) {
+    switch ($item.Status) {
+        "failed"  { $color = "Red" }
+        "warning" { $color = "Yellow" }
+        "skipped" { $color = "DarkGray" }
+        default   { $color = "Green" }
+    }
+    Write-Log ("   {0,-28} {1,-10} {2}" -f $item.Name, $item.Status, $item.Detail).TrimEnd() $color
+}
 Write-Log ""
 $failed = @($script:Problems | Where-Object { $_.Status -eq "failed" })
 $warnings = @($script:Problems | Where-Object { $_.Status -eq "warning" })
