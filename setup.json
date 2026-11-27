@@ -3,10 +3,11 @@
   "name": "Working With Markdown",
   "folder": "training-markdown",
   "repoUrl": "https://github.com/databankimx/training-markdown.git",
-  "branch": "main",
+  "branch": "dev",
   "baseDirectory": "C:\\Development\\training",
   "runTests": true,
   "installs": {
+    "notepadPlusPlus": { "install": true, "winget": "Notepad++.Notepad++" },
     "git": {
       "install": true,
       "winget": "Git.Git"
